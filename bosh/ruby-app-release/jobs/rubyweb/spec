@@ -6,7 +6,7 @@ templates:
   config.ebr: tmp/config.yml
 
 packages:
-- ruby
+- ruby-3.4
 
 properties:
   port:
