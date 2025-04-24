@@ -7,6 +7,7 @@ require_relative '../app/middleware/auth'
 require_relative './helpers/headers'
 require_relative '../app/routes/home'
 require_relative '../app/routes/articles'
+require_relative '../app/routes/comments'
 
 describe HomeRoutes do
   include Rack::Test::Methods
@@ -115,6 +116,47 @@ describe ArticleRoutes do
       hashed_response = JSON.parse(response.body)
       expect(hashed_response).to have_key('msg')
       expect(hashed_response['msg']).to eq('Article does not exist')
+    end
+  end
+end
+
+describe CommentRoutes do
+  include Rack::Test::Methods
+
+  let(:app) { CommentRoutes.new }
+  let(:auth_header) { prepare_headers(HeaderType::HTTP_AUTH) }
+
+  before(:all) do
+    require_relative '../config/environment'
+    require_relative '../app/models/db_init' 
+  end
+
+
+  context 'GET /articles/:article_id/comments' do
+    it 'returns all comments for an article' do
+      response = get '/articles/1/comments', nil, auth_header
+      expect(response.status).to eq 200
+      expect(JSON.parse(response.body)).to have_key('comments')
+    end
+  end
+
+  context 'POST /articles/:article_id/comments' do
+    it 'creates a comment for an article' do
+      payload = { author_name: 'John', content: 'comment content' }
+      response = post '/articles/1/comments', JSON.generate(payload), prepare_headers
+      expect(response.status).to eq 200
+      expect(JSON.parse(response.body)['msg']).to eq('Comment created')
+    end
+  end
+
+  context 'DELETE /comments/:id' do
+    it 'deletes a comment by ID' do
+      create_response = post '/articles/1/comments', JSON.generate({ author_name: 'Temp', content: 'To delete' }), prepare_headers
+      comment_id = JSON.parse(create_response.body)['id']
+
+      response = delete "/comments/#{comment_id}", nil, auth_header
+      expect(response.status).to eq 200
+      expect(JSON.parse(response.body)['msg']).to eq('Comment deleted')
     end
   end
 end

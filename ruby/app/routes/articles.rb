@@ -54,7 +54,6 @@ class ArticleRoutes < Sinatra::Base
 
   delete('/:id') do
     summary = @articleCtrl.delete_article params['id']
-    puts summary
     if summary[:ok]
       { msg: 'Article deleted' }.to_json
     else
